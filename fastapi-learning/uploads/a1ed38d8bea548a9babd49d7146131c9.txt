@@ -1,0 +1,61 @@
+# RAG 系统环境变量配置 - 生产环境
+# 最后更新: 2026-06-18
+
+# ========== 通用 ==========
+ENVIRONMENT=production
+LOG_LEVEL=INFO
+SERVICE_NAME=rag-qa
+
+# ========== 网关与认证 ==========
+GATEWAY_PORT=8080
+JWT_SECRET=JWT_SECRET_KEY_2026_prod_!@#$
+JWT_EXPIRE_HOURS=8
+RATE_LIMIT_PER_USER=100/minute
+
+# ========== 向量数据库 (Milvus) ==========
+MILVUS_HOST=milvus-prod.internal.company.com
+MILVUS_PORT=19530
+MILVUS_USER=rag_service
+MILVUS_PASSWORD=Milvus@Prod2026
+MILVUS_COLLECTION=finance_kb_v3
+MILVUS_INDEX_TYPE=IVF_SQ8
+MILVUS_NPROBE=16
+
+# ========== 稀疏检索 (Elasticsearch) ==========
+ES_HOST=es-prod-1.internal,es-prod-2.internal
+ES_PORT=9200
+ES_INDEX_NAME=finance_docs
+ES_USER=rag_es_user
+ES_PASS=Es#Secure_2026
+
+# ========== 重排序模型 ==========
+RERANKER_MODEL_PATH=/models/bge-reranker-v2-m3
+RERANKER_BATCH_SIZE=32
+RERANKER_TOP_K=5
+
+# ========== LLM 推理 ==========
+LLM_ENDPOINT=http://llm-vllm-prod:8000/v1/completions
+LLM_MODEL_NAME=Qwen2.5-72B-Instruct-GPTQ-Int4
+LLM_MAX_TOKENS=2048
+LLM_TEMPERATURE=0.1
+LLM_TIMEOUT=10s
+FALLBACK_LLM_ENDPOINT=http://gpt4-proxy:8080/v1/chat
+
+# ========== 知识库管理 ==========
+KB_STORAGE_TYPE=minio
+MINIO_ENDPOINT=minio-prod:9000
+MINIO_ACCESS_KEY=admin
+MINIO_SECRET_KEY=Minio#2026_Strong
+KB_BUCKET=rag-knowledge-base
+KB_SYNC_INTERVAL=300s
+
+# ========== 监控 ==========
+PROMETHEUS_PUSH_GATEWAY=http://pushgateway:9091
+GRAFANA_DASHBOARD_UID=rag_dashboard
+TRACING_ENABLED=true
+JAEGER_ENDPOINT=http://jaeger:14268/api/traces
+
+# ========== 安全 ==========
+SENSITIVE_WORDS_FILE=/data/sensitive_words.txt
+OUTPUT_FILTER_ENABLED=true
+CITATION_REQUIRED=true

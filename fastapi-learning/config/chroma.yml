@@ -1,0 +1,16 @@
+collection_name: agent
+persist_directory: chroma_db
+k: 3
+data_path: data
+md5_hex_store: md5.txt
+allow_knowledge_file_type: ['txt', 'pdf', 'md', 'docx']
+
+chunk_size: 200
+chunk_overlap: 20
+separators: ["\n\n", "\n", ".", "!", "?", "。", "！", "？", " ", ""]
+
+# 文件上传配置
+UPLOAD_FOLDER: os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
+MAX_UPLOAD_MB: 100
+# 重排序模型配置
+RERANKER_MODEL_PATH: D:\Hugging_Face\models\Qwen3-Reranker-0.6B
