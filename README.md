@@ -1,65 +1,207 @@
 # RAG-Backend
 
-这是一个 Retrieval-Augmented Generation (RAG) 项目后端，用于：
-- 将用户上传或现有文档切分、向量化并存入本地向量数据库（Chroma）。
-- 使用检索到的片段与 LLM（配置化）联合生成对话、摘要或报告。
+基于 FastAPI 的检索增强生成（RAG）后端系统，支持知识库管理、文档向量化、智能问答和 Agent 智能体。
 
-主要技术栈：FastAPI、LangChain（core/社区加载器）、Chroma、本地/远程大模型（通过配置指定）。
+## 技术栈
 
-特性
-- 文档加载（txt/pdf/md/docx）与 MD5 去重
-- 向量化并持久化到 Chroma（config/chroma.yml）
-- 可配置的系统/摘要/报告 prompts（prompts/）
-- 支持文件上传（uploads/）与 API 路由（routers/）
+- **FastAPI** - 现代 Web 框架
+- **SQLAlchemy** - 异步 ORM
+- **ChromaDB** - 向量数据库
+- **LangChain / LangGraph** - LLM 应用框架
+- **JWT** - 用户认证
+- **Pydantic** - 数据验证
+- **SQLite** - 关系型数据库
 
-快速开始（Windows）
-1. 克隆仓库并进入目录：
-   cd path\to\repo
-2. 创建并激活虚拟环境：
-   python -m venv .venv
-   .venv\Scripts\activate
-3. 安装依赖（若项目无 requirements.txt，请安装下面列出的包）：
-   pip install fastapi uvicorn pyyaml chromadb langchain-core langchain-community python-docx
-4. 启动开发服务器：
-   uvicorn main:app --reload --host 127.0.0.1 --port 8000
-5. API 文档：
-   - Swagger: http://127.0.0.1:8000/docs
-   - ReDoc:  http://127.0.0.1:8000/redoc
+## 功能特性
 
-主要配置文件
-- config/rag.yml：RAG 相关模型名称（示例：chat_model_name、embedding_model_name）
-- config/chroma.yml：Chroma 设置（collection_name、persist_directory、chunk_size、md5 存储等）
-- config/prompts.yml：prompts 文件路径（prompts/main_prompt.txt 等）
+- 用户注册 / 登录 / JWT 认证
+- 知识库 CRUD 管理
+- 文档上传（支持 TXT、MD、DOCX、PDF 等格式）
+- 文档自动分块与向量化存储
+- 基于 RAG 的智能问答（流式响应）
+- 多轮对话历史记录
+- Agent 智能体（工具调用）
+- 数据可视化统计
 
-关键目录说明
-- main.py                 # FastAPI 应用入口，包含路由挂载（users, KnowledgeBase, document, chat）
-- routers/                # API 路由集合（users、KnowledgeBase、document、chat）
-- utils/                  # 工具模块：file_handler（加载/切分/MD5）、config_handler、prompt_loader、path_tool
-- prompts/                # 文本型 prompts（main_prompt.txt / rag_summarize.txt / report_prompt.txt）
-- config/                 # YAML 配置文件
-- uploads/                # 上传文件临时存放
-- chroma_db/              # （默认）Chroma 持久化目录（由 config/chroma.yml 指定）
-- md5.txt                 # 已处理文件的 md5 列表（去重用）
+## 项目结构
 
-运行说明与注意事项
-- 修改模型或 embedding 名称请更新 config/rag.yml
-- 若使用本地重排序/检索模型，保证路径（如 config 中的 RERANKER_MODEL_PATH）可被访问
-- 文件上传后，服务会计算 md5 并检查 md5.txt 来避免重复索引
-- prompts 通过 utils/prompt_loader.py 读取，请确保 prompts.yml 的路径正确
+```
+fastapi-learning/
+├── agent/                      # Agent 智能体
+│   ├── agent.py                # Agent 工厂
+│   ├── agent_tools.py          # 自定义工具
+│   └── agent_middleware.py     # Agent 中间件
+├── config/                     # 配置文件
+│   ├── chroma.yml              # ChromaDB 配置
+│   ├── prompts.yml             # 提示词配置
+│   └── rag.yml                 # RAG 配置
+├── db/                         # 数据库
+│   ├── database.py             # 数据库连接与会话管理
+│   └── models.py               # SQLAlchemy 数据模型
+├── model/                      # 模型层
+│   └── factory.py              # LLM 模型工厂
+├── prompts/                    # 提示词模板
+│   ├── main_prompt.txt         # 主系统提示词
+│   ├── rag_summarize.txt       # RAG 摘要提示词
+│   └── report_prompt.txt       # 报告生成提示词
+├── routers/                    # API 路由
+│   ├── chat.py                 # 聊天对话接口
+│   ├── document.py             # 文档管理接口
+│   ├── KnowledgeBase.py        # 知识库管理接口
+│   ├── users.py                # 用户管理接口
+│   └── visualize.py            # 可视化统计接口
+├── schemas/                    # Pydantic 数据模型
+│   ├── chat.py                 # 聊天请求/响应模型
+│   ├── document.py             # 文档请求/响应模型
+│   ├── KnowledgeBase.py        # 知识库请求/响应模型
+│   └── user.py                 # 用户请求/响应模型
+├── services/                   # 业务服务层
+│   ├── rag_service.py          # RAG 检索服务
+│   ├── recorder_service.py     # 重排序服务
+│   └── vector_service.py       # 向量服务
+├── utils/                      # 工具函数
+│   ├── auth.py                 # JWT 认证工具
+│   ├── config_handler.py       # 配置读取
+│   ├── file_handler.py         # 文件处理
+│   ├── path_tool.py            # 路径工具
+│   └── prompt_loader.py        # 提示词加载
+├── uploads/                    # 上传文件存储目录
+├── chroma_db/                  # ChromaDB 向量数据存储
+├── scripts/                    # 脚本工具
+├── main.py                     # 应用入口
+├── requirements.txt            # Python 依赖
+└── .env                        # 环境变量配置
+```
 
-开发与调试
-- 遇到依赖/导入问题，先确认虚拟环境已激活且依赖已安装
-- utils 中的 get_abs_path() 基于项目根目录构建路径，注意在脚本或测试中使用相对路径时保持一致
+## 快速开始
 
-部署建议
-- 生产环境使用 Gunicorn + Uvicorn worker 或其它 ASGI 进程管理方案
-- 将 Chroma 数据目录映射到持久存储（容器部署时请使用卷）
-- 使用环境变量管理凭证与模型路径，避免将密钥写入仓库
+### 环境要求
 
-贡献
-欢迎 PR / Issue。提交变更前请尽量包含可复现步骤与相关配置说明。
+- Python 3.11+
+- 虚拟环境（推荐）
 
-许可证
-按项目需要选择合适许可证（例如 MIT）。
+### 安装依赖
 
-如果需要，将 README 翻译为英文、补充示例请求/响应或把具体启动命令改为生产环境脚本。# rag-service
+```bash
+cd fastapi-learning
+pip install -r requirements.txt
+```
+
+### 配置环境变量
+
+复制 .env 文件并填入所需配置：
+
+```
+# 数据库连接
+DATABASE_URL=sqlite+aiosqlite:///./rag.db
+
+# JWT 密钥
+SECRET_KEY=your-secret-key
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=1440
+
+# LLM API 配置
+LLM_API_KEY=your-api-key
+LLM_BASE_URL=https://api.deepseek.com/v1
+LLM_MODEL=deepseek-chat
+```
+
+### 启动服务
+
+```bash
+# 开发模式（带热重载）
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
+
+# 生产模式
+uvicorn main:app --host 0.0.0.0 --port 8000 --workers 4
+```
+
+访问 API 文档：http://localhost:8000/docs
+
+## API 接口
+
+### 用户接口 /api/users
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| POST | /api/users/register | 用户注册 |
+| POST | /api/users/login | 用户登录 |
+| GET | /api/users/ | 获取用户列表 |
+| POST | /api/users/disabled | 禁用用户（管理员） |
+| POST | /api/users/unban | 解封用户（管理员） |
+| POST | /api/users/verify | 验证用户状态 |
+| POST | /api/users/change-password | 修改密码 |
+
+### 知识库接口 /api/knowledgebase
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| POST | /api/knowledgebase/create | 创建知识库 |
+| POST | /api/knowledgebase/update | 更新知识库 |
+| POST | /api/knowledgebase/delete | 删除知识库 |
+| GET | /api/knowledgebase/ | 分页查询知识库列表 |
+
+### 文档接口 /api/document
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | /api/document/list | 分页查询文档列表 |
+| POST | /api/document/upload | 上传文档到知识库 |
+| POST | /api/document/delete | 删除文档 |
+
+### 聊天接口 /api/chat
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| POST | /api/chat/ask | 发送问题（流式响应） |
+| GET | /api/chat/list | 获取会话历史列表 |
+
+### 可视化接口 /api/visualize
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | /api/visualize/amount | 获取数据统计概览 |
+
+## 数据库模型
+
+- **users** - 用户表（用户名、邮箱、密码、角色、状态）
+- **knowledge_base** - 知识库表（名称、描述、创建者）
+- **knowledge_document** - 文档表（文件名、类型、大小、分块数、关联知识库）
+- **conversation_history** - 会话历史表（问题、回答、用户、知识库关联）
+
+## 核心流程
+
+### RAG 问答流程
+
+1. 用户发送问题到 /api/chat/ask
+2. 系统根据 kb_id 从 ChromaDB 检索相关文档片段
+3. 使用重排序服务对检索结果进行排序
+4. 将检索上下文 + 用户问题组装成提示词
+5. 调用 LLM 生成回答（支持流式输出）
+6. 保存会话历史到数据库
+
+### 文档处理流程
+
+1. 用户上传文档到 /api/document/upload
+2. 解析文档内容并分块
+3. 对每个分块进行向量化（Embedding）
+4. 将向量存储到 ChromaDB（关联 kb_id）
+5. 记录文档元数据到数据库
+
+## 配置说明
+
+### config/chroma.yml
+
+ChromaDB 向量数据库配置（集合名称、持久化路径等）。
+
+### config/rag.yml
+
+RAG 检索配置（Top-K、相似度阈值等）。
+
+### config/prompts.yml
+
+提示词模板路径配置。
+
+## 许可证
+
+MIT License
